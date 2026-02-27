@@ -123,10 +123,10 @@
                 class="login-input"
                 placeholder="你的名字"
                 maxlength="12"
-                autocomplete="off"
-                autocorrect="off"
-                autocapitalize="off"
-                spellcheck="false"
+                autocomplete="new-password"
+                name="fake-username"
+                readonly
+                onfocus="this.removeAttribute('readonly');"
             >
             <!-- 1. 提示文案移至下方 -->
             <span id="login-hint" class="login-hint"></span>
