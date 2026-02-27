@@ -288,7 +288,12 @@ def finish_game():
 
 
 if __name__ == '__main__':
-    init_db()  # 启动时初始化 DB
-    print("🚀 智能猜词游戏已启动：http://127.0.0.1:5000")
-    print("📦 数据库文件：game_history.db")
-    app.run(debug=True, port=5000)
+    init_db()
+    import os
+
+    # 获取 Render 分配的端口，如果没有则默认为 5000 (本地开发用)
+    port = int(os.environ.get("PORT", 5000))
+
+    # 注意：debug=True 在生产环境通常设为 False，但为了调试可以先留着
+    # host='0.0.0.0' 是必须的，允许外部访问
+    app.run(host='0.0.0.0', port=port, debug=False)
