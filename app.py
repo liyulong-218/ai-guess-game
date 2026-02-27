@@ -287,13 +287,22 @@ def finish_game():
         return jsonify({"status": "duplicate"}), 400
 
 
+# ==========================================
+# ✅ 关键修复：在全局作用域直接初始化数据库
+# ==========================================
+# 这行代码不在 if 块里，确保无论是 Gunicorn 还是本地运行，都会第一时间执行
+init_db()
+print("✅ 数据库已初始化完成 (Users & GameHistory tables created)")
+
+# ==========================================
+# 本地开发入口 (仅在直接运行 python app.py 时生效)
+# ==========================================
 if __name__ == '__main__':
-    init_db()
     import os
 
-    # 获取 Render 分配的端口，如果没有则默认为 5000 (本地开发用)
+    # 获取 Render 分配的端口，如果没有则默认为 5000
     port = int(os.environ.get("PORT", 5000))
 
-    # 注意：debug=True 在生产环境通常设为 False，但为了调试可以先留着
-    # host='0.0.0.0' 是必须的，允许外部访问
+    # 启动 Flask 内置服务器 (仅用于本地调试)
+    # 生产环境 Render 会使用上面的 init_db() + Gunicorn (由 Procfile 指定)
     app.run(host='0.0.0.0', port=port, debug=False)
