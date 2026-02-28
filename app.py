@@ -269,6 +269,54 @@ except Exception as e:
 
 print("✅ [READY] 应用加载完成，等待请求...")
 
+
+@app.route('/admin/data')
+def view_all_data():
+    """一个简单的管理员页面，展示所有游戏记录"""
+    # ⚠️ 注意：生产环境这里应该加密码验证！现在任何人都能看。
+    db = get_db()
+    # 查询最近 100 条记录
+    rows = db.execute('''
+        SELECT username, target_word, attempts, hints, created_at 
+        FROM game_history 
+        ORDER BY created_at DESC 
+        LIMIT 100
+    ''').fetchall()
+    
+    # 生成简单的 HTML 表格
+    html = """
+    <html>
+    <head><title>游戏数据后台</title></head>
+    <body style="font-family: sans-serif; padding: 20px;">
+        <h1>🎮 最近 100 局游戏数据</h1>
+        <table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%;">
+            <tr>
+                <th>用户名</th>
+                <th>目标词</th>
+                <th>猜测次数</th>
+                <th>提示次数</th>
+                <th>时间</th>
+            </tr>
+    """
+    for row in rows:
+        html += f"""
+            <tr>
+                <td>{row['username']}</td>
+                <td>{row['target_word']}</td>
+                <td>{row['attempts']}</td>
+                <td>{row['hints']}</td>
+                <td>{row['created_at']}</td>
+            </tr>
+        """
+    html += """
+        </table>
+        <p><a href="/">返回首页</a></p>
+    </body>
+    </html>
+    """
+    return html
+
+
 # ==========================================
 # 本地开发入口
 # ==========================================
