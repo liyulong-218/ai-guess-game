@@ -7,6 +7,8 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from datetime import datetime
 
+print("🚀 [START] 应用开始加载...")
+
 # 加载配置
 load_dotenv()
 API_KEY = os.getenv("MOONSHOT_API_KEY")
@@ -253,24 +255,24 @@ def finish_game():
         return jsonify({"status": "duplicate"}), 400
 
 
+print("🚀 [START] 应用开始加载...")
+
 try:
+    print("💾 [DB] 准备初始化数据库...")
     init_db()
     print("✅ 数据库已初始化完成 (Users & GameHistory tables created)")
 except Exception as e:
-    # 如果初始化失败，打印详细错误，但不要阻止应用启动（防止死循环）
     print(f"❌ 数据库初始化失败：{e}")
     import traceback
     traceback.print_exc()
+    # 注意：这里不要 exit()，让应用继续尝试启动，也许只是警告
+
+print("✅ [READY] 应用加载完成，等待请求...")
 
 # ==========================================
-# 本地开发入口 (仅在直接运行 python app.py 时生效)
+# 本地开发入口
 # ==========================================
 if __name__ == '__main__':
     import os
-
-    # 获取 Render 分配的端口，如果没有则默认为 5000
     port = int(os.environ.get("PORT", 5000))
-
-    # 启动 Flask 内置服务器 (仅用于本地调试)
-    # 生产环境 Render 会使用上面的 init_db() + Gunicorn (由 Procfile 指定)
     app.run(host='0.0.0.0', port=port, debug=False)
