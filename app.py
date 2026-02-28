@@ -22,21 +22,24 @@ CORS(app)
 def login():
     data = request.json
     username = data.get('username', '').strip()
-
     if not username:
         return jsonify({"error": "用户名不能为空"}), 400
 
     db = get_db()
+    is_new = False
     try:
-        # 尝试插入新用户 (如果不存在则插入成功，存在则报错 IntegrityError)
         db.execute('INSERT INTO users (username) VALUES (?)', (username,))
         db.commit()
+        is_new = True
         msg = f"欢迎新用户 {username}!"
     except sqlite3.IntegrityError:
         msg = f"欢迎回来, {username}!"
 
-    return jsonify({"status": "success", "username": username, "message": msg})
+    # ✅ 添加日志
+    status = "新用户" if is_new else "老用户"
+    print(f"👤 [LOGIN] 用户: {username} | 状态: {status}")
 
+    return jsonify({"status": "success", "username": username, "message": msg})
 
 @app.route('/api/get_user_stats', methods=['GET'])
 def get_user_stats():
@@ -172,7 +175,9 @@ def init_game():
          "clue": "生成的描述文本"
        }}
     """
-
+    
+    start_time = time.time() # 记录开始时间
+    
     try:
         content = call_ai([
             {"role": "system", "content": system_prompt},
@@ -194,6 +199,10 @@ def init_game():
             print(f"⚠️ AI 竟然生成了重复词 {word}，正在重试...")
             return init_game()  # 递归重试
 
+        duration = round(time.time() - start_time, 2)
+        # ✅ 添加日志
+        print(f"🎮 [NEW_GAME] 用户: {username} | 题目: {word} | AI耗时: {duration}秒")
+        
         return jsonify({
             "word_length": len(word),
             "clue": clue,
@@ -250,6 +259,8 @@ def finish_game():
     hints = data.get('hints', 0)
 
     if save_game_result(username, word, clue, attempts, hints):
+        # ✅ 添加日志
+        print(f"🏆 [GAME_OVER] 用户: {username} | 题目: {word} | 猜测: {attempts}次 | 提示: {hints}次")
         return jsonify({"status": "success"})
     else:
         return jsonify({"status": "duplicate"}), 400
