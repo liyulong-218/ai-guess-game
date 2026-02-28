@@ -10,7 +10,7 @@ from datetime import datetime
 # 加载配置
 load_dotenv()
 API_KEY = os.getenv("MOONSHOT_API_KEY")
-DB_PATH = 'game_history.db'
+DB_PATH = 'game_data.db'
 
 app = Flask(__name__, static_folder='static')
 CORS(app)
