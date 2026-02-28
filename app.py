@@ -261,7 +261,7 @@ def finish_game():
 
     if save_game_result(username, word, clue, attempts, hints):
         # ✅ 添加日志
-        print(f"🏆 [GAME_OVER] 用户: {username} | 题目: {word} | 猜测: {attempts}次 | 提示: {hints}次")
+        print(f"🏆 [Mission_Completed] 用户: {username} | 题目: {word} | 猜测: {attempts}次 | 提示: {hints}次")
         return jsonify({"status": "success"})
     else:
         return jsonify({"status": "duplicate"}), 400
