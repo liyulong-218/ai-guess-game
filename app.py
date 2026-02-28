@@ -71,67 +71,33 @@ def close_db(exception):
 
 def init_db():
     """初始化数据库表"""
-    with sqlite3.connect(DB_PATH) as conn:
-        # 1. 创建用户表
-        conn.execute('''
-                     CREATE TABLE IF NOT EXISTS users
-                     (
-                         username
-                         TEXT
-                         PRIMARY
-                         KEY,
-                         created_at
-                         TIMESTAMP
-                         DEFAULT
-                         CURRENT_TIMESTAMP
-                     )
-                     ''')
+    # 注意：这里使用绝对路径或者相对路径都要小心
+    # 在 Render 上，当前目录是 /opt/render/project/src
+    # 所以 'game_history.db' 会创建在这个目录下，这是正确的
 
-        # 2. 创建游戏记录表 (增加 username 字段)
+    with sqlite3.connect(DB_PATH) as conn:  # DB_PATH = 'game_history.db'
+        # 创建用户表
         conn.execute('''
-                     CREATE TABLE IF NOT EXISTS game_history
-                     (
-                         id
-                         INTEGER
-                         PRIMARY
-                         KEY
-                         AUTOINCREMENT,
-                         username
-                         TEXT
-                         NOT
-                         NULL,
-                         target_word
-                         TEXT
-                         NOT
-                         NULL,
-                         clue_text
-                         TEXT
-                         NOT
-                         NULL,
-                         created_at
-                         TIMESTAMP
-                         DEFAULT
-                         CURRENT_TIMESTAMP,
-                         attempts
-                         INTEGER
-                         DEFAULT
-                         0,
-                         hints
-                         INTEGER
-                         DEFAULT
-                         0,
-                         FOREIGN
-                         KEY
-                     (
-                         username
-                     ) REFERENCES users
-                     (
-                         username
-                     )
-                         )
-                     ''')
+            CREATE TABLE IF NOT EXISTS users (
+                username TEXT PRIMARY KEY,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        # 创建游戏记录表
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS game_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                target_word TEXT NOT NULL,
+                clue_text TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                attempts INTEGER DEFAULT 0,
+                hints INTEGER DEFAULT 0,
+                FOREIGN KEY(username) REFERENCES users(username)
+            )
+        ''')
         conn.commit()
-    print("✅ 数据库初始化完成 (支持多用户)")
 
 
 def get_history_words(username, limit=50):
@@ -287,12 +253,14 @@ def finish_game():
         return jsonify({"status": "duplicate"}), 400
 
 
-# ==========================================
-# ✅ 关键修复：在全局作用域直接初始化数据库
-# ==========================================
-# 这行代码不在 if 块里，确保无论是 Gunicorn 还是本地运行，都会第一时间执行
-init_db()
-print("✅ 数据库已初始化完成 (Users & GameHistory tables created)")
+try:
+    init_db()
+    print("✅ 数据库已初始化完成 (Users & GameHistory tables created)")
+except Exception as e:
+    # 如果初始化失败，打印详细错误，但不要阻止应用启动（防止死循环）
+    print(f"❌ 数据库初始化失败：{e}")
+    import traceback
+    traceback.print_exc()
 
 # ==========================================
 # 本地开发入口 (仅在直接运行 python app.py 时生效)
